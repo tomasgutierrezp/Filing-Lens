@@ -1,0 +1,9 @@
+{
+  "note": "Companies whose tags differ from Apple and Unilever. Each listed metric must resolve for the latest fiscal year; values are not checked here.",
+  "companies": [
+    {"ticker": "MSFT", "cik": 789019, "must_have": ["revenue", "operating_income", "net_income", "cfo", "capex", "d_and_a", "sga", "total_debt", "debt_repaid", "cash", "total_equity"]},
+    {"ticker": "GOOGL", "cik": 1652044, "must_have": ["revenue", "operating_income", "net_income", "cfo", "capex", "d_and_a", "sga", "ppe", "debt_repaid", "debt_issued"]},
+    {"ticker": "KO", "cik": 21344, "must_have": ["revenue", "operating_income", "net_income", "cfo", "capex", "total_debt", "dividends_paid"]},
+    {"ticker": "PG", "cik": 80424, "must_have": ["revenue", "operating_income", "net_income", "cfo", "capex", "total_equity", "cash", "total_debt"]}
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "ticker": "UL",
+  "cik": 217410,
+  "taxonomy": "ifrs-full",
+  "currency": "EUR",
+  "scale": 1000000,
+  "source": "Unilever PLC Form 20-F, consolidated income statement and cash flow statement (EUR millions). 'as_first_reported' is the figure printed in that year's own 20-F. 'latest' is the comparative printed in the FY2025 20-F, which re-presents 2023-2024 after the Ice Cream business moved to discontinued operations. net_income = net profit attributable to shareholders' equity.",
+  "metrics": ["revenue", "net_income", "cfo", "capex"],
+  "years": {
+    "2022": {"as_first_reported": {"revenue": 60073, "net_income": 7642, "cfo": 7282, "capex": 1456}},
+    "2023": {"as_first_reported": {"revenue": 59604, "net_income": 6487, "cfo": 9426, "capex": 1502},
+             "latest": {"revenue": 51680, "capex": 1194}, "restated": ["revenue", "capex"]},
+    "2024": {"as_first_reported": {"revenue": 60761, "net_income": 5744, "cfo": 9519, "capex": 1738},
+             "latest": {"revenue": 52479, "capex": 1381}, "restated": ["revenue", "capex"]}
+  }
+}

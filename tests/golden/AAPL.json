@@ -1,0 +1,14 @@
+{
+  "ticker": "AAPL",
+  "cik": 320193,
+  "taxonomy": "us-gaap",
+  "currency": "USD",
+  "scale": 1000000,
+  "source": "Apple Inc. Form 10-K, Consolidated Statements of Operations and of Cash Flows (USD millions), fiscal years ended Sep 30 2023, Sep 28 2024, Sep 27 2025.",
+  "metrics": ["revenue", "net_income", "cfo", "capex"],
+  "years": {
+    "2023": {"as_first_reported": {"revenue": 383285, "net_income": 96995, "cfo": 110543, "capex": 10959}},
+    "2024": {"as_first_reported": {"revenue": 391035, "net_income": 93736, "cfo": 118254, "capex": 9447}},
+    "2025": {"as_first_reported": {"revenue": 416161, "net_income": 112010, "cfo": 111482, "capex": 12715}}
+  }
+}
