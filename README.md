@@ -8,7 +8,7 @@ A personal, free, local-first tool that turns public-company SEC filings into cl
 
 ## What it does
 
-- **Company search.** Enter a US ticker (or SEC CIK number) to see the company, its accounting taxonomy (US-GAAP or IFRS), reporting currency and fiscal year end.
+- **Company search.** Start typing a company name or ticker ("apple") and pick from the dropdown, or enter an SEC CIK number, to see the company, its accounting taxonomy (US-GAAP or IFRS), reporting currency and fiscal year end.
 - **Verdict.** The first tab: one word each for the long term and the short term (Favourable, Mixed or Unfavourable), with the signals behind it. It summarises evidence by fixed rules in `src/metrics/verdict.py`; it is not advice, not a forecast, and knows nothing about your circumstances.
 - **KPI dashboard.** Twelve cards with value, sparkline, a one-sentence rule-based explanation, and the formula and sources behind every number. Four more cards show price-based multiples.
 - **Scorecard.** Rule-based letter grades (A to E, with a 0–100 score) for the business's current state, historical record and future readiness, one grade per model, and a separate grade for the news climate. Every grade shows the inputs, thresholds and weights behind it.

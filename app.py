@@ -8,6 +8,7 @@ from typing import Optional
 
 import pandas as pd
 import streamlit as st
+from streamlit_searchbox import st_searchbox
 
 from src import config
 from src.climate import events as climate_events, gdelt, headlines
@@ -669,8 +670,8 @@ def render_compare(ix: Optional[FactIndex], profile: dict) -> None:
     if ix is None or ix.fiscal_years.empty:
         st.info("No annual financial data (XBRL) was found for this company on EDGAR.")
         return
-    raw = st.text_input("Compare with (up to 4 tickers, separated by commas)", key=f"peers-{ix.cik}",
-                        placeholder="for example MSFT, GOOGL",
+    raw = st.text_input("Compare with (up to 4 names or tickers, separated by commas)", key=f"peers-{ix.cik}",
+                        placeholder="for example Microsoft, Google",
                         help="You choose the peers. Pick companies in the same line of business "
                              "for the comparison to mean something.")
     peers = [t.strip().upper() for t in raw.split(",") if t.strip()][:4]
@@ -890,16 +891,54 @@ def render_climate(profile: dict) -> None:
                                             "link": st.column_config.LinkColumn("Link", display_text="Open")})
 
 
+@st.cache_data(ttl=24 * config.HOUR, show_spinner=False)
+def load_company_list() -> list:
+    """Every company in the SEC list, largest first."""
+    return tickers.company_list()
+
+
 def _open_ticker(ticker: str) -> None:
-    st.session_state["ticker"] = ticker
+    """Watchlist click: make this the company on screen."""
+    st.session_state["active"] = ticker
+
+
+def _find_companies(term: str) -> list:
+    """Suggestions for the search box: (label shown, ticker returned)."""
+    term = term.strip()
+    if term.isdigit():
+        return [(f"SEC company number {term}", term)]
+    return [(tickers.option_label(c), c.ticker) for c in tickers.search(term, load_company_list(), limit=8)]
+
+
+@st.fragment
+def company_search() -> None:
+    """Type-ahead company search. Runs as a fragment so typing only refreshes the box,
+    not the whole page; choosing a company reloads the page for it."""
+    picked = st_searchbox(
+        _find_companies, label="Find a company", placeholder="Type a name or ticker, e.g. Apple",
+        clear_on_submit=True, rerun_scope="fragment", key="company_search",
+        help="Start typing a company name or ticker, then pick from the list (or press Enter "
+             "for the first match). An SEC company number (CIK) works too.")
+    if picked and picked != st.session_state.get("last_pick"):
+        st.session_state["last_pick"] = picked
+        st.session_state["active"] = str(picked).strip()
+        st.rerun()
 
 
 def main() -> None:
     with st.sidebar:
         st.header("📑 Filing Lens")
-        st.session_state.setdefault("ticker", "AAPL")
-        query = st.text_input("Ticker or CIK", key="ticker", help="A US ticker such as AAPL or UL, "
-                              "or the SEC's numeric company ID (CIK).").strip()
+        st.session_state.setdefault("active", "AAPL")
+        try:
+            load_company_list()
+            company_search()
+        except EdgarError:   # the SEC company list is unavailable (for example no SEC_USER_AGENT yet)
+            typed = st.text_input("Ticker or CIK", value=st.session_state["active"],
+                                  help="A US ticker such as AAPL or UL, or the SEC's numeric "
+                                       "company ID (CIK).").strip()
+            if typed:
+                st.session_state["active"] = typed
+        query = st.session_state["active"]
         saved = watchlist.load()
         if saved:
             st.caption("Watchlist")
@@ -908,14 +947,13 @@ def main() -> None:
                 pick.button(t, key=f"wl-open-{t}", on_click=_open_ticker, args=(t,), use_container_width=True)
                 drop.button("✕", key=f"wl-drop-{t}", on_click=watchlist.remove, args=(t,),
                             help=f"Remove {t} from the watchlist")
-        if query and query.upper() not in saved:
-            st.button("Save to watchlist", on_click=watchlist.add, args=(query,))
+        save_slot = st.container()
         if config.SEC_USER_AGENT_IS_DEFAULT:
             st.warning("SEC_USER_AGENT is not set in .env. Ticker search needs it; "
                        "a numeric CIK still works (Apple 320193, Unilever 217410).")
         st.caption("Numbers come only from SEC EDGAR filings. Educational tool, not investment advice.")
     if not query:
-        st.info("Enter a ticker to begin.")
+        st.info("Choose a company to begin.")
         return
     try:
         with st.spinner("Loading from SEC EDGAR…"):
@@ -923,6 +961,8 @@ def main() -> None:
     except EdgarError as exc:
         st.error(str(exc))
         return
+    if profile.get("ticker") and profile["ticker"] not in saved:
+        save_slot.button("Save to watchlist", on_click=watchlist.add, args=(profile["ticker"],))
     ix, facts_error = None, None
     try:
         with st.spinner("Loading financial data…"):

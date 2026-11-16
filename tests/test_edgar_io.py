@@ -66,14 +66,47 @@ def test_client_errors_are_clear(client):
         client.get_json("f")
 
 
+TABLE = {"0": {"cik_str": 320193, "ticker": "AAPL", "title": "Apple Inc."},
+         "1": {"cik_str": 1652044, "ticker": "GOOGL", "title": "Alphabet Inc."},
+         "2": {"cik_str": 1067983, "ticker": "BRK-B", "title": "BERKSHIRE HATHAWAY INC"},
+         "3": {"cik_str": 37996, "ticker": "F", "title": "FORD MOTOR CO"},
+         "4": {"cik_str": 1418076, "ticker": "APLE", "title": "Apple Hospitality REIT, Inc."},
+         "5": {"cik_str": 38264, "ticker": "FORD", "title": "FORWARD INDUSTRIES, INC."},
+         "6": {"cik_str": 732717, "ticker": "T", "title": "AT&T INC."},
+         "7": {"cik_str": 999, "ticker": "PINE", "title": "Pineapple Energy Inc."}}
+
+
 def test_ticker_lookup(client):
-    table = {"0": {"cik_str": 320193, "ticker": "AAPL", "title": "Apple Inc."},
-             "1": {"cik_str": 1067983, "ticker": "BRK-B", "title": "BERKSHIRE HATHAWAY INC"}}
-    client.session = FakeSession({config.URL_TICKERS: FakeResp(table)})
+    client.session = FakeSession({config.URL_TICKERS: FakeResp(TABLE)})
     assert tickers.lookup(" aapl ", client).cik == 320193
     assert tickers.lookup("BRK.B", client).cik == 1067983
-    with pytest.raises(EdgarError, match="not found"):
-        tickers.lookup("NOPE", client)
+    with pytest.raises(EdgarError, match="No company matching"):
+        tickers.lookup("zzzz", client)
+    with pytest.raises(EdgarError, match="Enter a company name"):
+        tickers.lookup("  ", client)
+
+
+def test_lookup_by_company_name_and_alias(client):
+    client.session = FakeSession({config.URL_TICKERS: FakeResp(TABLE)})
+    assert tickers.lookup("apple", client).ticker == "AAPL"            # larger company first
+    assert tickers.lookup("Apple Hospitality", client).ticker == "APLE"
+    assert tickers.lookup("berkshire hathaway", client).ticker == "BRK-B"
+    assert tickers.lookup("at&t", client).ticker == "T"
+    assert tickers.lookup("google", client).ticker == "GOOGL"          # everyday name, not the legal one
+    assert tickers.lookup("Ford", client).ticker == "F"                # not the unrelated ticker FORD
+    assert tickers.lookup("FORD MOTOR", client).ticker == "F"
+    assert tickers.lookup("hathaway", client).ticker == "BRK-B"        # a later word in the name
+
+
+def test_search_ranking_and_labels(client):
+    client.session = FakeSession({config.URL_TICKERS: FakeResp(TABLE)})
+    companies = tickers.company_list(client)
+    assert [c.ticker for c in tickers.search("apple", companies)] == ["AAPL", "APLE", "PINE"]
+    assert [c.ticker for c in tickers.search("f", companies)][:2] == ["F", "FORD"]     # exact ticker, then names
+    assert tickers.search("apple", companies, limit=1)[0].ticker == "AAPL"
+    assert tickers.search("", companies) == [] and tickers.search("qqqq", companies) == []
+    assert tickers.option_label(companies[0]) == "Apple Inc. (AAPL)"
+    assert tickers.option_label(companies[2]) == "Berkshire Hathaway Inc (BRK-B)"
 
 
 def test_list_filings(client):

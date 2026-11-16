@@ -4,3 +4,4 @@ python-dotenv==1.2.1
 streamlit==1.50.0
 plotly==7.1.0
 yfinance==1.2.0
+streamlit-searchbox==0.1.23
